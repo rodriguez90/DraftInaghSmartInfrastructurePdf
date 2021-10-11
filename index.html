@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <table style="width: 100%; height: auto" id="my-table">
+
+    </table>
+    <div id="example1"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.js" integrity="sha512-3LA5JnOY0t71uVlxhnpeBlDAeWc9cDSS83/TV9VctW3qSRPlEN7XDYsoEllTeJWUinWno2401LGunftBEhepXg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>-->
+<script src="https://unpkg.com/jspdf-autotable"></script>
+<script>
+    window.jsPDF = window.jspdf.jsPDF;
+</script>
+<script src="jsPDF_text_align.js"></script>
+
+<script src="images.js"></script>
+<script>
+
+    let doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4', //210 x 297 mm
+        putOnlyUsedFonts: true,
+        floatPrecision: 16 // or "smart", default is 16
+    });
+    doc.addFont('fonts/Oswald-SemiBold.ttf', 'Oswald-SemiBold', 'normal');
+    doc.addFont('fonts/Arimo-Regular.ttf', 'Arimo', 'normal');
+    doc.addFont('fonts/ArialMS.ttf', 'Arial', 'normal');
+    const width = doc.internal.pageSize.getWidth();
+    const marginLeftRight = 10;
+    const marginTop = 25;
+    let baseTop = marginTop;
+    let offset = 0;
+    const widthWithoutMargins = width - marginLeftRight * 2;
+
+    //PAGES
+
+    //1 - COVER (1 page)
+    doc.setFont("Oswald-SemiBold", "normal");
+    doc.setFontSize(70);
+    doc.setTextColor(0x43, 0x43, 0x43);
+    doc.text("Inagh", 105, marginTop, null, null, "center");
+    doc.setFont("Arimo", "normal");
+    doc.setFontSize(26);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Smart Community Plan", 105, 37, null, null, "center");
+    doc.setFontSize(19);
+    doc.text("Pillar 4", 105, 47, null, null, "center");
+    doc.addImage({
+        imageData: img_community_management_planning,
+        angle: 0,
+        format: 'PNG',
+        x: 10,
+        y: 55,
+        w: widthWithoutMargins,
+        h: 17
+    });
+    doc.setFontSize(15);
+    doc.textEx('Revision Number: 1.03', marginLeftRight, 77, 'left', 'middle');
+    doc.textEx('Revision Date: ', 201, 77, 'right', 'middle');
+    doc.textEx('23/09/21', marginLeftRight, 83, 'left', 'middle');
+    doc.setFontSize(21);
+    doc.text('A Plan by the Community for the Community ', 100, 100, null, null, "center");
+    doc.addImage({
+        imageData: img_townz_logo,
+        angle: 0,
+        x: 25,
+        format: 'PNG',
+        y: 108,
+        w: 150,
+        h: 40
+    });
+    doc.addPage()
+
+    //2 - INTRODUCTION (4 pages, starts in a new page) Covers: introduction, Benefits of a Local Plan, The Four-Part Plan included, How Did We Get Here?, Plan Structure, What’s Next?, So What Can You Do?,
+    //2.1 Introduction
+    doc.addImage({
+        imageData: grandpha_img,//TODO Replace with HQ version after testing. Using LQ for better performance
+        format: 'JPEG',
+        angle: 0,
+        x: marginLeftRight,
+        y: marginTop,
+        w: widthWithoutMargins,
+        // compression: "SLOW",
+        h: 120
+    });
+    doc.setFontSize(20);
+    doc.setTextColor(204, 0, 0);
+    doc.text("1.", marginLeftRight, 155);
+
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Introduction", 20, 155);
+
+    doc.setFontSize(12);
+    doc.setFont("Arial", "normal");
+    doc.text("Welcome to the", marginLeftRight, 163);
+
+    doc.setFont("Arial", "bold");
+    doc.text(" Inagh Smart Plan, Pillar 1 - Health, Recreation and Quality of life.", 37, 163);
+
+    doc.setFont("Arial", "normal");
+    doc.text("This plan has been compiled by the Inagh “Environment & Sustainability” town team. The plan " +
+        "was formally agreed and signed off on the DD/MM/YY by the town team. The town team is" +
+        "comprised of local residents, business, clubs, and public service providers working together " +
+        "with a progressive and coordinated approach to local development.", marginLeftRight, 170, {maxWidth: widthWithoutMargins , align: "justify"});
+
+    doc.text("This plan, first prepared in September 2021 is a working document which the relevant town team " +
+        "agrees to update every 12 months.", marginLeftRight, 193, {maxWidth: widthWithoutMargins , align: "justify"});
+
+    doc.text("The aim of this community plan is to create meaningful engagement with local communities and " +
+        "local development organizations to ensure that the best outcome for Inagh is achieved. ", marginLeftRight, 206, {maxWidth: widthWithoutMargins , align: "justify"});
+
+    //2.2 Benefits of a Local Plan
+    doc.setFont("Arial", "bold");
+    doc.text("Benefits of a Local Plan", marginLeftRight, 219);
+
+    doc.setFont("Arial", "normal");
+    baseTop = 222;
+    const lineHeight = 6;
+    doc.text('\u2022 ' + "Better local collaboration", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Encourage greater volunteerism", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Provide direction to local development", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Creates a unified voice and action team ", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Helps identify and understand problems", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Improves access to outside supports ", marginLeftRight+5, baseTop+=lineHeight);
+    doc.text('\u2022 ' + "Instill pride in the community", marginLeftRight+5, baseTop+=lineHeight);
+
+    baseTop+=lineHeight
+    baseTop+=2
+    doc.text("This plan is one component of a wider community planning initiative run by Inagh Community Development " +
+        "Forum. The structure includes four master plans covering the four main pillars/ local development themes and " +
+        "a variety of sub plans for related sub pillars", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins , align: "justify"});
+
+    //2.3 The Four-Part Plan included
+
+    //3 - Executive Summary (1 page, starts in a new page)
+    //4 - Assets (dynamic (min 1 page, starts in a new page), depends on the size of the table)
+    //5 - Stakeholders (dynamic (min 1 page), depends on the size of the table, starts in a new page)
+    //6 - Goals (dynamic (min 2 pages), depends on the size of the table, starts in a new page)
+    //7 - Projects (does not require a new page, is contiguous to Goals) (dynamic (min 2 pages), depends on the size of the table)
+    //8 - Appendices (2 pages, starts in a new page)
+
+    //TODO Remove on production
+    // const string = doc.output('datauristring');
+    // document.getElementById('test').src = string;
+    window.open(URL.createObjectURL(doc.output("blob")));
+    // doc.save("out.pdf")
+
+
+</script>
+</body>
+</html>

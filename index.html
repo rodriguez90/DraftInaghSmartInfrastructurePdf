@@ -5,22 +5,88 @@
     <title>Title</title>
 </head>
 <body>
-<div>
-    <table style="width: 100%; height: auto" id="my-table">
-
-    </table>
-    <div id="example1"></div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.js" integrity="sha512-3LA5JnOY0t71uVlxhnpeBlDAeWc9cDSS83/TV9VctW3qSRPlEN7XDYsoEllTeJWUinWno2401LGunftBEhepXg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.js" integrity="sha512-3LA5JnOY0t71uVlxhnpeBlDAeWc9cDSS83/TV9VctW3qSRPlEN7XDYsoEllTeJWUinWno2401LGunftBEhepXg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>-->
 <!--<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>-->
+<script src="jspdf/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/jspdf-autotable"></script>
 <script>
     window.jsPDF = window.jspdf.jsPDF;
 </script>
 <script src="jsPDF_text_align.js"></script>
-
+<script src="data.js"></script>
 <script src="images.js"></script>
 <script>
+    function addTable(categoryName, categorySlug, top, left) {
+        const headerDefinition = [
+            [
+                {"content": categoryName, "colSpan": 4, "styles": {"fillColor": [153, 153, 153]}}
+            ],
+            [
+                {"content": "ID", "styles": {"fillColor": [153, 153, 153], "valign": "middle"}},
+                {"content": "Title", "styles": {"fillColor": [153, 153, 153], "valign": "middle"}},
+                {"content": "Summary", "styles": {"fillColor": [153, 153, 153], "valign": "middle"}},
+                {"content": "Type", "styles": {"fillColor": [153, 153, 153], "valign": "middle"}}
+            ],
+        ];
+        doc.autoTable({
+            margin: {left: left, right: 0},
+            startY: top,
+            theme: 'grid',
+            headStyles: {
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0],
+                fontWeight: 700,
+                halign: "center",
+                valign: "middle",
+                textColor: [0, 0, 0]
+            },
+
+            columnStyles: {
+                0: {cellWidth: 15},
+                1: {cellWidth: 65},
+                2: {cellWidth: 65},
+                3: {cellWidth: 35},
+            },
+            bodyStyles: {
+                lineColor: [0, 0, 0],
+                textColor: [0x21, 0x25, 0x29],
+                overflow: 'linebreak'
+            },
+            head: headerDefinition,
+            body: groups[categorySlug].map((group) => {
+                return [group["id"], group["title"], group["description"], group["type_description"]];
+            }),
+            didParseCell: function (data) {
+                if ([1, 2].includes(data.column.index) && data.section !== "head") {
+                    if (data.cell.raw.length > 150) {
+                        const textSpace = 50 - data.cell.padding('horizontal');
+                        const text = data.doc.splitTextToSize(data.cell.text, textSpace + 1 / data.doc.internal.scaleFactor, {fontSize: data.cell.styles.fontSize});
+                        if (text.length > 5) {
+                            data.row.height = text.length * 5.5;
+                        }
+                    }
+                }
+            }
+
+        })
+    }
+
+    function addTitle(left, top, text, index) {
+        doc.setFontSize(20);
+        doc.setTextColor(204, 0, 0);
+        doc.text(`${index}.`, left, top);
+
+        doc.setFontSize(20);
+        doc.setTextColor(0, 0, 0);
+        doc.text(text, 20, top);
+    }
+
+    function addSubTitle(left, top, text) {
+        doc.setFont("Arimo", 'bold');
+        doc.setFontSize(17);
+        doc.setTextColor(0xcc, 0, 0);
+        doc.text(text, left, top);
+    }
 
     let doc = new jsPDF({
         orientation: 'p',
@@ -32,6 +98,7 @@
     });
     doc.addFont('fonts/Oswald-SemiBold.ttf', 'Oswald-SemiBold', 'normal');
     doc.addFont('fonts/Arimo-Regular.ttf', 'Arimo', 'normal');
+    doc.addFont('fonts/Arimo-Bold.ttf', 'Arimo', 'bold');
     doc.addFont('fonts/Arial.ttf', 'Arial', 'normal');
     doc.addFont('fonts/ArialBold.ttf', 'Arial', 'bold');
     const width = doc.internal.pageSize.getWidth();
@@ -42,165 +109,441 @@
     let lineHeight = 6;
     let offset = 0;
     const widthWithoutMargins = width - marginLeftRight * 2;
+    let index = 1;
 
     //PAGES
 
     //1 - COVER (1 page)
-    baseTop = marginTop;
-    doc.setFont("Oswald-SemiBold", "normal");
-    doc.setFontSize(70);
-    doc.setTextColor(0x43, 0x43, 0x43);
-    doc.text("Inagh", 105, baseTop, null, null, "center");
+    {
+        baseTop = marginTop;
+        doc.setFont("Oswald-SemiBold", "normal");
+        doc.setFontSize(70);
+        doc.setTextColor(0x43, 0x43, 0x43);
+        doc.text("Inagh", 105, baseTop, null, null, "center");
 
-    doc.setFont("Arimo", "normal");
-    doc.setFontSize(26);
-    doc.setTextColor(0, 0, 0);
+        doc.setFont("Arimo", "normal");
+        doc.setFontSize(26);
+        doc.setTextColor(0, 0, 0);
 
-    baseTop += (2 * lineHeight)
-    doc.text("Smart Community Plan", 105, baseTop, null, null, "center");
+        baseTop += (2 * lineHeight)
+        doc.text("Smart Community Plan", 105, baseTop, null, null, "center");
 
-    baseTop += (lineHeight)
-    doc.setFontSize(19);
-    doc.text("Pillar 4", 105, baseTop, null, null, "center");
+        baseTop += (lineHeight)
+        doc.setFontSize(19);
+        doc.text("Pillar 4", 105, baseTop, null, null, "center");
 
-    baseTop += (lineHeight)
-    doc.addImage({
-        imageData: img_community_management_planning,
-        angle: 0,
-        format: 'PNG',
-        x: 10,
-        y: baseTop,
-        w: widthWithoutMargins,
-        h: 17
-    });
+        baseTop += (lineHeight)
+        doc.addImage({
+            imageData: img_community_management_planning,
+            angle: 0,
+            format: 'PNG',
+            x: 10,
+            y: baseTop,
+            w: widthWithoutMargins,
+            h: 17
+        });
 
-    baseTop += (17 + 0.5 * lineHeight)
-    doc.setFontSize(15);
-    doc.textEx('Revision Number: 1.03', marginLeftRight, baseTop, 'left', 'middle');
-    doc.textEx('Revision Date: ', 201, baseTop, 'right', 'middle');
+        baseTop += (17 + 0.5 * lineHeight)
+        doc.setFontSize(15);
+        doc.textEx('Revision Number: 1.03', marginLeftRight, baseTop, 'left', 'middle');
+        doc.textEx('Revision Date: ', 201, baseTop, 'right', 'middle');
 
-    baseTop += (lineHeight)
-    doc.textEx('23/09/21', marginLeftRight, baseTop, 'left', 'middle');
+        baseTop += (lineHeight)
+        doc.textEx('23/09/21', marginLeftRight, baseTop, 'left', 'middle');
 
-    baseTop += (2 * lineHeight)
-    doc.setFontSize(21);
-    doc.text('A Plan by the Community for the Community ', 100, baseTop, null, null, "center");
+        baseTop += (2 * lineHeight)
+        doc.setFontSize(21);
+        doc.text('A Plan by the Community for the Community ', 100, baseTop, null, null, "center");
 
-    baseTop += (lineHeight)
-    doc.addImage({
-        imageData: img_townz_logo,
-        angle: 0,
-        x: 25,
-        format: 'PNG',
-        y: baseTop,
-        w: 150,
-        h: 40
-    });
+        baseTop += (lineHeight)
+        doc.addImage({
+            imageData: img_townz_logo,
+            angle: 0,
+            x: 25,
+            format: 'PNG',
+            y: baseTop,
+            w: 150,
+            h: 40
+        });
+    }
 
     //2 - INTRODUCTION (4 pages, starts in a new page) Covers: introduction, Benefits of a Local Plan, The Four-Part Plan included, How Did We Get Here?, Plan Structure, What’s Next?, So What Can You Do?,
-    doc.addPage()
+
     //2.1 Introduction
-    baseTop = marginTop;
-    doc.addImage({
-        imageData: grandpha_big_img,
-        format: 'JPEG',
-        angle: 0,
-        x: marginLeftRight,
-        y: baseTop,
-        w: widthWithoutMargins,
-        // compression: "SLOW",
-        h: 120
-    });
-    baseTop += (120 + 2 * lineHeight); // The image height
-    doc.setFontSize(20);
-    doc.setTextColor(204, 0, 0);
-    doc.text("1.", marginLeftRight, baseTop);
+    {
+        doc.addPage()
+        baseTop = marginTop;
+        doc.addImage({
+            imageData: grandpha_big_img,
+            format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight,
+            y: baseTop,
+            w: widthWithoutMargins,
+            // compression: "SLOW",
+            h: 120
+        });
+        baseTop += (120 + 2 * lineHeight); // The image height
 
-    doc.setFontSize(20);
-    doc.setTextColor(0, 0, 0);
-    doc.text("Introduction", 20, baseTop);
-    baseTop += (2 * lineHeight)
-    doc.setFontSize(12);
-    doc.setFont("Arial", "normal");
-    doc.text("Welcome to the", marginLeftRight, baseTop);
-    doc.setFont("Arial", "bold");
-    doc.text(" Inagh Smart Plan, Pillar 1 - Health, Recreation and Quality of life.", 39, baseTop);
-    baseTop += lineHeight;
-    doc.setFont("Arial", "normal");
-    doc.text("This plan has been compiled by the Inagh “Environment & Sustainability” town team. The plan " +
-        "was formally agreed and signed off on the DD/MM/YY by the town team. The town team is" +
-        "comprised of local residents, business, clubs, and public service providers working together " +
-        "with a progressive and coordinated approach to local development.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        addTitle(marginLeftRight, baseTop, "Introduction", index++);
 
-    baseTop += (5 * lineHeight)
-    doc.text("This plan, first prepared in September 2021 is a working document which the relevant town team " +
-        "agrees to update every 12 months.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (2 * lineHeight)
+        doc.setFontSize(12);
+        doc.setFont("Arial", "normal");
+        doc.text("Welcome to the", marginLeftRight, baseTop);
+        doc.setFont("Arial", "bold");
+        doc.text(" Inagh Smart Plan, Pillar 1 - Health, Recreation and Quality of life.", 39, baseTop);
+        baseTop += lineHeight;
+        doc.setFont("Arial", "normal");
+        doc.text("This plan has been compiled by the Inagh “Environment & Sustainability” town team. The plan " +
+            "was formally agreed and signed off on the DD/MM/YY by the town team. The town team is" +
+            "comprised of local residents, business, clubs, and public service providers working together " +
+            "with a progressive and coordinated approach to local development.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
 
-    baseTop += (3 * lineHeight)
+        baseTop += (5 * lineHeight)
+        doc.text("This plan, first prepared in September 2021 is a working document which the relevant town team " +
+            "agrees to update every 12 months.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
 
-    doc.text("The aim of this community plan is to create meaningful engagement with local communities and " +
-        "local development organizations to ensure that the best outcome for Inagh is achieved. ", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (3 * lineHeight)
 
-    baseTop += (3 * lineHeight)
+        doc.text("The aim of this community plan is to create meaningful engagement with local communities and " +
+            "local development organizations to ensure that the best outcome for Inagh is achieved. ", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
 
-    //2.2 Benefits of a Local Plan
-    doc.setFont("Arial", "bold");
-    doc.text("Benefits of a Local Plan", marginLeftRight, baseTop);
+        baseTop += (3 * lineHeight)
 
-    baseTop += (2 * lineHeight)
-    doc.setFont("Arial", "normal");
-    doc.text('\u2022 ' + "Better local collaboration", marginLeftRight + 5, baseTop);
-    doc.text('\u2022 ' + "Encourage greater volunteerism", marginLeftRight + 5, baseTop += lineHeight);
-    doc.text('\u2022 ' + "Provide direction to local development", marginLeftRight + 5, baseTop += lineHeight);
-    doc.text('\u2022 ' + "Creates a unified voice and action team ", marginLeftRight + 5, baseTop += lineHeight);
-    doc.text('\u2022 ' + "Helps identify and understand problems", marginLeftRight + 5, baseTop += lineHeight);
-    doc.text('\u2022 ' + "Improves access to outside supports ", marginLeftRight + 5, baseTop += lineHeight);
-    doc.text('\u2022 ' + "Instill pride in the community", marginLeftRight + 5, baseTop += lineHeight);
+        //2.2 Benefits of a Local Plan
+        doc.setFont("Arial", "bold");
+        doc.text("Benefits of a Local Plan", marginLeftRight, baseTop);
 
-    baseTop += (2 * lineHeight)
-    doc.text("This plan is one component of a wider community planning initiative run by Inagh Community Development " +
-        "Forum. The structure includes four master plans covering the four main pillars/ local development themes and " +
-        "a variety of sub plans for related sub pillars", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (2 * lineHeight)
+        doc.setFont("Arial", "normal");
+        doc.text('\u2022 ' + "Better local collaboration", marginLeftRight + 5, baseTop);
+        doc.text('\u2022 ' + "Encourage greater volunteerism", marginLeftRight + 5, baseTop += lineHeight);
+        doc.text('\u2022 ' + "Provide direction to local development", marginLeftRight + 5, baseTop += lineHeight);
+        doc.text('\u2022 ' + "Creates a unified voice and action team ", marginLeftRight + 5, baseTop += lineHeight);
+        doc.text('\u2022 ' + "Helps identify and understand problems", marginLeftRight + 5, baseTop += lineHeight);
+
+        doc.addPage(); //TODO Maybe can be removed in the future
+        baseTop = marginTop;
+        doc.text('\u2022 ' + "Improves access to outside supports ", marginLeftRight + 5, baseTop += lineHeight);
+        doc.text('\u2022 ' + "Instill pride in the community", marginLeftRight + 5, baseTop += lineHeight);
+
+        baseTop += (2 * lineHeight)
+        doc.text("This plan is one component of a wider community planning initiative run by Inagh Community Development " +
+            "Forum. The structure includes four master plans covering the four main pillars/ local development themes and " +
+            "a variety of sub plans for related sub pillars", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+    }
 
     //2.3 The Four-Part Plan included
+    {
+        baseTop += (4 * lineHeight)
+        doc.setFont("Arial", "bold")
+        doc.text("The Four-Part Plan included:", marginLeftRight, baseTop);
+        doc.addImage({
+            imageData: the_four_part_plan_included_image,
+            // format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight + widthWithoutMargins / 2,
+            y: baseTop - 20,
+            w: 90,
+            h: 90
+        });
+
+        doc.setFont("Arial", "normal")
+        baseTop += (1.5 * lineHeight);
+        doc.text("1. Health, Recreation & Quality of life", marginLeftRight + 10, baseTop);
+        baseTop += (1.5 * lineHeight);
+        doc.text("2. Environment & Sustainability", marginLeftRight + 10, baseTop);
+        baseTop += (1.5 * lineHeight);
+        doc.text("3. Business & Economy", marginLeftRight + 10, baseTop);
+        baseTop += (1.5 * lineHeight);
+        doc.text("4. Infrastructure, Planning & Governance", marginLeftRight + 10, baseTop);
+    }
+
+    //2.4 How Did We Get Here?
+    {
+        baseTop += (6 * lineHeight);
+        addSubTitle(marginLeftRight, baseTop, "How Did We Get Here?")
+        baseTop += (1.5 * lineHeight);
+        doc.autoTable({
+            margin: {left: marginLeftRight, right: 0},
+            startY: baseTop,
+            theme: 'grid',
+            bodyStyles: {
+                lineColor: [0, 0, 0],
+                textColor: [0x21, 0x25, 0x29],
+                overflow: 'linebreak',
+                rowHeight: 10 * lineHeight,
+                cellPadding: [10, 10, 10, 10]
+            },
+            columnStyles: {
+                0: {cellWidth: 90},
+                1: {cellWidth: 90},
+            },
+            body: [
+                [
+                    {"content": "Our local plans are compiled based on a modular, 5 step process developed by eTownz, university partners, and the Community Research Alliance under the principles of smart communities. The process includes:"},
+                    {"content": ""},
+                ]
+            ]
+        });
+        doc.addImage({
+            imageData: how_did_we_get_here_image,
+            // format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight + widthWithoutMargins / 2,
+            y: baseTop+2,
+            w: 80,
+            h: 55
+        });
+    }
 
     //3 - Executive Summary (1 page, starts in a new page)
-    doc.addPage()
+    {
+        doc.addPage()
+        doc.setFont("Arial", "normal");
+        baseTop = marginTop;
+        addTitle(marginLeftRight, baseTop, "Executive Summary", index++);
+        doc.setFontSize(12);
+        baseTop += (2 * lineHeight)
+        doc.text("This plan is the result of a year-long planning process where people from across the community " +
+            "were invited to contribute their ideas. Inagh is a beautiful town located in Clare. The town is " +
+            "historic despite not being a well-known tourist destination. Notwithstanding its many resources and " +
+            "great community spirit, the town is facing a series of challenges, such as a lack of participation in " +
+            "clubs and groups. Increasing participation in activities in Inagh would be very helpful in increasing " +
+            "the social well-being of Inagh residents. There are also problems with traffic in the area, particularly " +
+            "that cars are rushing in the area so there is a need for speed limit signs and/or speed bumps in order to " +
+            "increase the road safety of Inagh, especially for children going to school. There are, however, many " +
+            "amenities such as the river which can be used for fishing and water sports which can be used to increase " +
+            "tourism in the area. This would help Inagh's economy as well as increase awareness of the area to people " +
+            "that live outside the community. In general, Inagh has the opportunity to create a community that is very " +
+            "socially involved while still being a relaxing place. This will make its residents happier as well as " +
+            "increase the number of outsiders that visit Inagh.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"}
+        );
+    }
+
     //4 - Assets (dynamic (min 1 page, starts in a new page), depends on the size of the table)
-    doc.addPage()
+    if (groups["assets"].length !== 0) {
+        doc.addPage()
+        baseTop = marginTop;
+        addTitle(marginLeftRight, baseTop, "Assets", index++);
+        doc.setFontSize(12);
+        baseTop += (2 * lineHeight)
+        doc.text("Identifying, understanding, and appreciating the assets within a community is an important part of any " +
+            "community plan. This plan takes elements from a popular approach to community planning called Asset Based " +
+            "Community Development (ABCD). ABCD works on the premise that positive and effective community plans are built " +
+            "by leveraging existing assets within a community. Therefore, it is important to properly log all relevant " +
+            "assets in this pillar", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins / 2 - 10, align: "justify"});
+        let circleDims = widthWithoutMargins / 2 - marginLeftRight - 10;
+        doc.addImage({
+            imageData: assets_logo,
+            // format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight + widthWithoutMargins / 2,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        doc.setFont('Arial', 'bold');
+        baseTop += (12 * lineHeight)
+        doc.text("Assets", marginLeftRight, baseTop);
+        doc.setFont('Arial', 'normal');
+        doc.text("are physical features of the Town,", marginLeftRight + 15, baseTop);
+        baseTop += (1 * lineHeight)
+        doc.text("including natural features such as rivers or facilities like playgrounds.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins / 2 - 10, align: "justify"});
+        baseTop += (3 * lineHeight)
+        doc.text("The table below provides a themed breakdown of Asset", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins / 2 - 10, align: "justify"});
+        baseTop += (2 * lineHeight)
+        addTable("Assets", "assets", baseTop, marginLeftRight);
+    }
+
     //5 - Stakeholders (dynamic (min 1 page), depends on the size of the table, starts in a new page)
-    doc.addPage()
+    if (groups["stakeholders"].length !== 0) {
+        doc.addPage()
+        baseTop = marginTop;
+        addTitle(marginLeftRight, baseTop, "Stakeholders", index++);
+        doc.setFontSize(12);
+        baseTop += (2 * lineHeight)
+        doc.text("Good local plans should strive to help all stakeholders within a community, especially the most vulnerable. " +
+            "Sometimes, plans tend to focus on the most obvious stakeholders, such as local hotels, but forget about the small " +
+            "business owner working from home; they acknowledge the local football team, but ignore the local bridge club.  " +
+            "By building a register of the various local stakeholders, we aim for the Inagh Smart Community Plan to be inclusive " +
+            "and relevant to the needs of the people and organizations throughout Inagh.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins / 2 - 10, align: "justify"});
+        let circleDims = widthWithoutMargins / 2 - marginLeftRight - 10;
+        doc.addImage({
+            imageData: stakeholders_logo,
+            // format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight + widthWithoutMargins / 2,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        baseTop += (15 * lineHeight)
+        doc.text("There are four types of stakeholders:", marginLeftRight, baseTop);
+        doc.setFont('Arial', 'bold');
+        doc.text("Groups & Clubs, Public Services, Businesses and", marginLeftRight + 70, baseTop);
+        baseTop += (1 * lineHeight);
+        doc.text("Residents.", marginLeftRight, baseTop);
+        doc.setFont('Arial', 'normal');
+        doc.text("A stakeholder may represent one or more of these interests. The table below provides a", marginLeftRight + 23, baseTop);
+        baseTop += (1 * lineHeight);
+        doc.text("themed breakdown of local Stakeholders", marginLeftRight, baseTop);
+        baseTop += (2 * lineHeight);
+        addTable("Stakeholders", "stakeholders", baseTop, marginLeftRight);
+    }
+
     //6 - Goals (dynamic (min 2 pages), depends on the size of the table, starts in a new page)
-    doc.addPage()
+    if (groups["goals"].length !== 0) {
+        doc.addPage()
+        baseTop = marginTop;
+        addTitle(marginLeftRight, baseTop, "Goals", index++);
+        doc.setFontSize(12);
+        baseTop += (2 * lineHeight)
+        doc.text("Defining local goals and challenges can often be the most difficult component of a community plan, but it is vital nonetheless. " +
+            "Of course, different stakeholders within the community may wish to prioritize different goals. As such, defining clear goals is a " +
+            "necessary step in selecting projects and preparing a tailored action plan.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (5 * lineHeight)
+        circleDims = widthWithoutMargins / 2 - marginLeftRight - 5;
+        doc.addImage({
+            imageData: goals_logo,
+            angle: 0,
+            x: marginLeftRight + 0,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        doc.addImage({
+            imageData: challenges_logo,
+            angle: 0,
+            x: marginLeftRight + circleDims + 20,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        baseTop += (circleDims + 2 * lineHeight)
+        doc.setFont("Arial", "bold");
+        doc.setFontSize(15);
+        doc.text("Universal Community Development Goals", marginLeftRight, baseTop);
+
+        baseTop += (2 * lineHeight)
+        doc.setFontSize(12);
+        doc.text("Goal 1: Team Building, Management & Metrics", marginLeftRight, baseTop);
+
+        baseTop += (1.5 * lineHeight)
+        doc.setFont("Arial", "normal");
+        doc.text('\u2022 ' + "Bring together & organize local stakeholders", marginLeftRight + 5, baseTop);
+        doc.text('\u2022 ' + "Plan and coordinate projects and volunteers", marginLeftRight + 5, baseTop += (1.5 * lineHeight));
+        doc.text('\u2022 ' + "Collect key information, feedback, and monitor progress", marginLeftRight + 5, baseTop += (1.5 * lineHeight));
+
+
+        baseTop += (2 * lineHeight)
+        doc.setFont("Arial", "bold");
+        doc.setFontSize(12);
+        doc.text("Goal 2: Awareness, Understanding, Upskilling", marginLeftRight, baseTop);
+
+        baseTop += (1.5 * lineHeight)
+        doc.setFont("Arial", "normal");
+        doc.text('\u2022 ' + "Create awareness among local stakeholders", marginLeftRight + 5, baseTop);
+        doc.text('\u2022 ' + "Educate local stakeholders to encourage better practice", marginLeftRight + 5, baseTop += (1.5 * lineHeight));
+        doc.text('\u2022 ' + "Organize relevant training", marginLeftRight + 5, baseTop += (1.5 * lineHeight))
+
+        baseTop += (2 * lineHeight)
+        doc.setFont("Arial", "bold");
+        doc.setFontSize(12);
+        doc.text("Goal 3: Preserve, Support & Develop", marginLeftRight, baseTop);
+
+        baseTop += (1.5 * lineHeight)
+        doc.setFont("Arial", "normal");
+        doc.text('\u2022 ' + "Protect, conserve & develop existing local assets and stakeholders", marginLeftRight + 5, baseTop);
+        doc.text('\u2022 ' + "Support the creation of relevant new assets, stakeholders & services", marginLeftRight + 5, baseTop += (1.5 * lineHeight));
+        doc.text('\u2022 ' + "Develop new ways of extending and improving local capacity", marginLeftRight + 5, baseTop += (1.5 * lineHeight));
+        doc.addPage(); //TODO maybe needs to be removed in the feature
+        baseTop = marginTop;
+        doc.setFont("Arial", "bold");
+        doc.text("Goals from Inagh Community Survey:", marginLeftRight, baseTop);
+        doc.setFont("Arial", "normal");
+        doc.text("The table below provides a themed breakdown of", marginLeftRight + 78, baseTop);
+        baseTop += (1 * lineHeight)
+        doc.text("local objectives, which are divided into Goals & Challenges.", marginLeftRight, baseTop);
+
+        baseTop += (2 * lineHeight)
+        addTable("Goals", "goals", baseTop, marginLeftRight);
+    }
+
     //7 - Projects (does not require a new page, is contiguous to Goals) (dynamic (min 2 pages), depends on the size of the table)
+    if (groups["projects"].length !== 0) {
+        doc.addPage();
+        baseTop = marginTop;
+        addTitle(marginLeftRight, baseTop, "Projects", index++);
+        doc.setFontSize(12);
+        baseTop += (2 * lineHeight)
+        doc.text("Projects are the actions that stakeholders take to attain long term goals and improve their community. Local projects " +
+            "can range from coaching a youth team to building a hall or organising a clean-up. While sometimes overlooked, it's important " +
+            "to consider the projects that have recently been undertaken or that are currently underway in the area, as this helps place " +
+            "the capabilities for future projects in context.", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (5 * lineHeight)
+        circleDims = widthWithoutMargins / 2 - marginLeftRight - 30;
+        doc.addImage({
+            imageData: projects_past_logo,
+            angle: 0,
+            x: marginLeftRight,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        doc.addImage({
+            imageData: projects_logo,
+            angle: 0,
+            x: marginLeftRight + circleDims + 10,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        doc.addImage({
+            imageData: projects_planed_logo,
+            angle: 0,
+            x: marginLeftRight + (2 * circleDims) + 20,
+            y: baseTop,
+            w: circleDims,
+            h: circleDims
+        });
+        baseTop += (circleDims + 2 * lineHeight)
+        doc.text("The table below provides a themed breakdown of local projects which are divided into past, present, and planned projects", marginLeftRight, baseTop, {maxWidth: widthWithoutMargins, align: "justify"});
+        baseTop += (2 * lineHeight)
+        addTable("Projects", "projects", baseTop, marginLeftRight);
+    }
+
     //8 - Appendices (2 pages, starts in a new page)
-    doc.addPage()
-    baseTop = marginTop;
-    doc.addImage({
-        imageData: full_page_1,
-        format: 'JPEG',
-        angle: 0,
-        x: marginLeftRight,
-        y: baseTop,
-        w: widthWithoutMargins,
-        h: height - 2 * marginTop
-    });
-    doc.addPage()
-    doc.addImage({
-        imageData: full_page_2,
-        format: 'JPEG',
-        angle: 0,
-        x: marginLeftRight,
-        y: baseTop,
-        w: widthWithoutMargins,
-        h: height - 2 * marginTop
-    });
+    {
+        doc.addPage()
+        baseTop = marginTop;
+        doc.addImage({
+            imageData: full_page_1,
+            format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight,
+            y: baseTop,
+            w: widthWithoutMargins,
+            h: height - 2 * marginTop
+        });
+        doc.addPage()
+        doc.addImage({
+            imageData: full_page_2,
+            format: 'JPEG',
+            angle: 0,
+            x: marginLeftRight,
+            y: baseTop,
+            w: widthWithoutMargins,
+            h: height - 2 * marginTop
+        });
+    }
 
     //TODO Remove on production
     // const string = doc.output('datauristring');
     // document.getElementById('test').src = string;
-    window.open(URL.createObjectURL(doc.output("blob")));
-    // doc.save("out.pdf")
+    // window.open(URL.createObjectURL(doc.output("blob")));
+     doc.save("out.pdf")
 
 
 </script>
